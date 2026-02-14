@@ -1,17 +1,15 @@
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
-from pydantic import BaseModel
-from ai_logic import summarize_email, analyze_email, generate_reply
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
-@app.get("/")
-def home():
-    return FileResponse("index.html")
+from ai_logic import summarize_email, analyze_email, generate_reply
+
 
 app = FastAPI()
 
+
+# CORS (allow frontend to talk to backend)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,9 +17,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Serve homepage
+@app.get("/")
+def home():
+    return FileResponse("index.html")
+
+
+# Request schema
 class EmailRequest(BaseModel):
     email_text: str
 
+
+# Main processing route
 @app.post("/process-email")
 def process_email(request: EmailRequest):
     summary = summarize_email(request.email_text)
