@@ -1,14 +1,12 @@
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-
 from ai_logic import summarize_email, analyze_email, generate_reply
 
 app = FastAPI()
 
-# Enable CORS
+# Allow frontend requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,15 +15,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Root route (serve frontend)
+# Serve index.html
 @app.get("/")
 def home():
-    return FileResponse("../frontend/index.html")
-
+    return FileResponse("index.html")
 
 class EmailRequest(BaseModel):
     email_text: str
-
 
 @app.post("/process-email")
 def process_email(request: EmailRequest):
