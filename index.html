@@ -5,9 +5,7 @@
     <title>Smart Email Assistant</title>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -27,7 +25,6 @@
             overflow: hidden;
         }
 
-        /* HEADER */
         .header {
             background-color: #556b2f;
             color: #ffffff;
@@ -54,13 +51,6 @@
             border-radius: 8px;
             border: 1px solid #cfd3c9;
             resize: vertical;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #556b2f;
-            box-shadow: 0 0 0 3px rgba(85, 107, 47, 0.18);
         }
 
         button {
@@ -73,18 +63,11 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        button:hover:not(:disabled) {
-            background-color: #3f4f22;
-            box-shadow: 0 6px 16px rgba(85, 107, 47, 0.35);
         }
 
         button:disabled {
             background-color: #a7ad9b;
             cursor: not-allowed;
-            box-shadow: none;
         }
 
         #loading {
@@ -100,9 +83,7 @@
             border-top: 1px solid #e0e2dc;
         }
 
-        .section {
-            margin-bottom: 20px;
-        }
+        .section { margin-bottom: 20px; }
 
         .label {
             font-size: 14px;
@@ -140,6 +121,7 @@
     <textarea id="emailInput" placeholder="Paste customer email here..."></textarea>
 
     <button id="processBtn" onclick="processEmail()">Process Email</button>
+
     <p id="loading" style="display:none;">Processing email, please wait...</p>
 
     <div id="result" class="output" style="display:none;">
@@ -167,41 +149,39 @@
 </div>
 
 <script>
-    async function processEmail() {
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("processBtn").disabled = true;
+async function processEmail() {
+    const loading = document.getElementById("loading");
+    const btn = document.getElementById("processBtn");
 
-        const emailText = document.getElementById("emailInput").value;
+    loading.style.display = "block";
+    btn.disabled = true;
 
-        if (!emailText.trim()) {
-            alert("Please enter an email.");
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("processBtn").disabled = false;
-            return;
-        }
+    const emailText = document.getElementById("emailInput").value;
 
-        if (emailText.length > 3000) {
-            alert("Email too long. Please shorten it.");
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("processBtn").disabled = false;
-            return;
-        }
+    if (!emailText.trim()) {
+        alert("Please enter an email.");
+        loading.style.display = "none";
+        btn.disabled = false;
+        return;
+    }
 
-        const response = await fetch("/process-email", {
+    try {
+        // ⚠️ CHANGE THIS IF USING GITHUB PAGES
+        const API_URL = window.location.origin.includes("github")
+            ? "https://smart-email-assistant-in7j.onrender.com/process-email"
+            : "/process-email";
+
+        const response = await fetch(API_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                email_text: emailText
-            })
+            body: JSON.stringify({ email_text: emailText })
         });
 
         if (!response.ok) {
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("processBtn").disabled = false;
-            alert("Something went wrong. Please try again.");
-            return;
+            const errorText = await response.text();
+            throw new Error(errorText);
         }
 
         const data = await response.json();
@@ -211,12 +191,17 @@
         document.getElementById("sentiment").innerText = data.sentiment;
         document.getElementById("reply").innerText = data.suggested_reply;
 
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("processBtn").disabled = false;
         document.getElementById("result").style.display = "block";
+
+    } catch (error) {
+        alert("Error:\n" + error.message);
+        console.error(error);
+    } finally {
+        loading.style.display = "none";
+        btn.disabled = false;
     }
+}
 </script>
 
 </body>
 </html>
-

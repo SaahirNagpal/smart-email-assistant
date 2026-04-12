@@ -2,11 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from ai_logic import summarize_email, analyze_email, generate_reply
+from ai_logic import process_email_ai
+import os
 
 app = FastAPI()
 
-# Allow frontend requests
+# CORS (important for frontend)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,27 +16,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve index.html
+# Serve frontend
 @app.get("/")
 def home():
     return FileResponse("index.html")
 
+
 class EmailRequest(BaseModel):
     email_text: str
 
+
 @app.post("/process-email")
 def process_email(request: EmailRequest):
-    summary = summarize_email(request.email_text)
-    analysis = analyze_email(request.email_text)
-    reply = generate_reply(
-        request.email_text,
-        analysis["intent"],
-        analysis["sentiment"]
-    )
-
-    return {
-        "summary": summary,
-        "intent": analysis["intent"],
-        "sentiment": analysis["sentiment"],
-        "suggested_reply": reply
-    }
+    try:
+        result = process_email_ai(request.email_text)
+        return result
+    except Exception as e:
+        print("BACKEND ERROR:", str(e))
+        return {
+            "summary": "Error occurred",
+            "intent": "error",
+            "sentiment": "error",
+            "suggested_reply": str(e)
+        }
